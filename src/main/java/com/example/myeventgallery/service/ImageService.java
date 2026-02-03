@@ -24,7 +24,7 @@ public class ImageService {
     private ImageRepository imageRepository;
     
     @Autowired
-    private S3Service s3Service;
+    private StorageService storageService;
     
     @Autowired
     private GuestService guestService;
@@ -67,19 +67,19 @@ public class ImageService {
                 throw new RuntimeException("Only image files are allowed");
             }
             
-            // Upload to S3
-            String s3Key = s3Service.uploadFile(file, event.getS3FolderPath());
-            String s3Url = s3Service.getPresignedUrl(s3Key);
+            // Upload to storage (local or S3 based on profile)
+            String storageKey = storageService.uploadFile(file, event.getS3FolderPath());
+            String fileUrl = storageService.getFileUrl(storageKey);
             
             // Calculate file size in MB
             double fileSizeMB = file.getSize() / (1024.0 * 1024.0);
             
             // Create image record
             Image image = new Image();
-            image.setFileName(s3Key.substring(s3Key.lastIndexOf("/") + 1));
+            image.setFileName(storageKey.substring(storageKey.lastIndexOf("/") + 1));
             image.setOriginalFileName(file.getOriginalFilename());
-            image.setS3Key(s3Key);
-            image.setS3Url(s3Url);
+            image.setS3Key(storageKey);
+            image.setS3Url(fileUrl);
             image.setFileSizeMB(fileSizeMB);
             image.setContentType(contentType);
             image.setEvent(event);
@@ -125,8 +125,8 @@ public class ImageService {
             throw new RuntimeException("Unauthorized access");
         }
         
-        // Delete from S3
-        s3Service.deleteFile(image.getS3Key());
+        // Delete from storage
+        storageService.deleteFile(image.getS3Key());
         
         // Delete from database
         imageRepository.delete(image);

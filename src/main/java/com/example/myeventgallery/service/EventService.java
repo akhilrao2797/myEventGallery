@@ -35,9 +35,6 @@ public class EventService {
     @Autowired
     private QRCodeService qrCodeService;
     
-    @Autowired
-    private S3Service s3Service;
-    
     @Transactional
     public EventResponse createEvent(EventCreateRequest request, Long customerId) throws WriterException, IOException {
         Customer customer = customerService.getCustomerById(customerId);

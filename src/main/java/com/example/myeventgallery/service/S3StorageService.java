@@ -2,6 +2,7 @@ package com.example.myeventgallery.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -15,8 +16,12 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.UUID;
 
+/**
+ * AWS S3 storage implementation for production
+ */
 @Service
-public class S3Service {
+@Profile({"prod", "production"})
+public class S3StorageService implements StorageService {
     
     @Autowired
     private S3Client s3Client;
@@ -27,6 +32,7 @@ public class S3Service {
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
     
+    @Override
     public String uploadFile(MultipartFile file, String folderPath) throws IOException {
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
         String key = folderPath + fileName;
@@ -42,7 +48,8 @@ public class S3Service {
         return key;
     }
     
-    public String getPresignedUrl(String key) {
+    @Override
+    public String getFileUrl(String key) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
@@ -58,6 +65,7 @@ public class S3Service {
         return presignedRequest.url().toString();
     }
     
+    @Override
     public void deleteFile(String key) {
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                 .bucket(bucketName)
@@ -67,6 +75,7 @@ public class S3Service {
         s3Client.deleteObject(deleteObjectRequest);
     }
     
+    @Override
     public boolean doesFileExist(String key) {
         try {
             HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()

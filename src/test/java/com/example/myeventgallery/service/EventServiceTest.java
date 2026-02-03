@@ -43,9 +43,6 @@ class EventServiceTest {
     @Mock
     private QRCodeService qrCodeService;
 
-    @Mock
-    private S3Service s3Service;
-
     @InjectMocks
     private EventService eventService;
 
