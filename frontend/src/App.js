@@ -13,6 +13,7 @@ import GuestUpload from './pages/GuestUpload';
 import GuestLogin from './pages/GuestLogin';
 import GuestDashboard from './pages/GuestDashboard';
 import AdminLogin from './pages/AdminLogin';
+import AdminRegister from './pages/AdminRegister';
 import AdminDashboard from './pages/AdminDashboard';
 
 // Auth helpers
@@ -91,6 +92,7 @@ function App() {
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/register" element={<AdminRegister />} />
           <Route 
             path="/admin/dashboard" 
             element={

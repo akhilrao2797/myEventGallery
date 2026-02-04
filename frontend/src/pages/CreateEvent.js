@@ -28,11 +28,17 @@ function CreateEvent() {
   const loadPackages = async () => {
     try {
       const response = await getPackages();
+      console.log('Packages response:', response.data);
       if (response.data.success) {
-        setPackages(response.data.data);
+        setPackages(response.data.data || []);
+      } else {
+        console.error('Package loading failed:', response.data.message);
       }
     } catch (err) {
-      console.error('Failed to load packages', err);
+      console.error('Failed to load packages:', err);
+      console.error('Error details:', err.response?.data);
+      // Set empty array to avoid errors
+      setPackages([]);
     }
   };
 
@@ -229,34 +235,41 @@ function CreateEvent() {
             </h3>
 
             <div className="packages-grid">
-              {packages.map((pkg) => (
-                <div
-                  key={pkg.packageType}
-                  className={`package-card ${formData.packageType === pkg.packageType ? 'selected' : ''}`}
-                  onClick={() => handlePackageSelect(pkg.packageType)}
-                >
-                  <div className="package-name">{pkg.packageType}</div>
-                  <div className="package-price">
-                    ${pkg.basePrice}
-                    <span>/event</span>
-                  </div>
-                  <div className="package-description">
-                    {pkg.description || 'Perfect for your event needs'}
-                  </div>
-                  <ul className="package-features">
-                    <li>{pkg.storageLimit} GB Storage</li>
-                    <li>Up to {pkg.maxGuests} Guests</li>
-                    <li>{pkg.validityDays} Days Access</li>
-                    <li>QR Code Generation</li>
-                    {pkg.packageType === 'PREMIUM' && (
-                      <>
-                        <li>Priority Support</li>
-                        <li>Advanced Analytics</li>
-                      </>
-                    )}
-                  </ul>
+              {packages.length === 0 ? (
+                <div style={{padding: '20px', textAlign: 'center', color: '#718096'}}>
+                  Loading packages...
                 </div>
-              ))}
+              ) : (
+                packages.map((pkg) => (
+                  <div
+                    key={pkg.packageType}
+                    className={`package-card ${formData.packageType === pkg.packageType ? 'selected' : ''}`}
+                    onClick={() => handlePackageSelect(pkg.packageType)}
+                  >
+                    <div className="package-name">{pkg.name || pkg.packageType}</div>
+                    <div className="package-price">
+                      ${pkg.basePrice}
+                      <span>/event</span>
+                    </div>
+                    <div className="package-description">
+                      {pkg.description || 'Perfect for your event needs'}
+                    </div>
+                    <ul className="package-features">
+                      <li>{pkg.storageGB} GB Storage</li>
+                      <li>Up to {pkg.maxGuests} Guests</li>
+                      <li>Up to {pkg.maxImages} Images</li>
+                      <li>{pkg.storageDays} Days Access</li>
+                      <li>QR Code Generation</li>
+                      {pkg.packageType === 'PREMIUM' && (
+                        <>
+                          <li>Priority Support</li>
+                          <li>Advanced Analytics</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Actions */}

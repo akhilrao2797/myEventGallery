@@ -63,6 +63,42 @@ public class AdminService {
         return new AuthResponse(token, admin.getId(), admin.getFullName(), admin.getEmail());
     }
     
+    @Transactional
+    public AuthResponse registerAdmin(AdminRegistrationRequest request) {
+        // Validate super admin key for security (only super admins can create new admins)
+        String expectedKey = "SUPER_ADMIN_SECRET_KEY_2026"; // In production, use environment variable
+        if (request.getSuperAdminKey() == null || !request.getSuperAdminKey().equals(expectedKey)) {
+            throw new RuntimeException("Invalid super admin key. Only authorized super admins can create admin accounts.");
+        }
+        
+        // Check if username already exists
+        if (adminRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("Username already exists");
+        }
+        
+        // Check if email already exists
+        if (adminRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already exists");
+        }
+        
+        // Create new admin
+        Admin admin = new Admin();
+        admin.setUsername(request.getUsername());
+        admin.setEmail(request.getEmail());
+        admin.setPassword(passwordEncoder.encode(request.getPassword()));
+        admin.setFullName(request.getFullName());
+        admin.setRole(request.getRole());
+        admin.setIsActive(true);
+        admin.setCreatedAt(LocalDateTime.now());
+        
+        admin = adminRepository.save(admin);
+        
+        // Generate token
+        String token = jwtUtil.generateCustomerToken(admin.getEmail(), admin.getId());
+        
+        return new AuthResponse(token, admin.getId(), admin.getFullName(), admin.getEmail());
+    }
+    
     public AdminDashboardStats getDashboardStats() {
         LocalDate today = LocalDate.now();
         LocalDate weekStart = today.minusDays(7);

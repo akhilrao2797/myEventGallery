@@ -61,6 +61,7 @@ export const getGuestDashboard = () => api.get('/guest/dashboard');
 export const deleteGuestImage = (imageId) => api.delete(`/guest/image/${imageId}`);
 
 // Admin Auth APIs
+export const adminRegister = (data) => api.post('/admin/register', data);
 export const adminLogin = (data) => api.post('/admin/login', data);
 export const getAdminDashboard = () => api.get('/admin/dashboard/stats');
 export const getAllEvents = (params) => api.get('/admin/events', { params });
@@ -102,6 +103,6 @@ export const updateFolderImages = (folderId, imageIds) =>
 export const deleteSharedFolder = (folderId) => api.delete(`/shared-folders/${folderId}`);
 
 // Package APIs
-export const getPackages = () => api.get('/packages');
+export const getPackages = () => api.get('/packages/list');
 
 export default api;

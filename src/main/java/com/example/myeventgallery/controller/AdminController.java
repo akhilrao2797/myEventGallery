@@ -21,6 +21,16 @@ public class AdminController {
     @Autowired
     private AdminService adminService;
     
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<AuthResponse>> registerAdmin(@RequestBody AdminRegistrationRequest request) {
+        try {
+            AuthResponse response = adminService.registerAdmin(request);
+            return ResponseEntity.ok(ApiResponse.success("Admin registered successfully", response));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> adminLogin(@RequestBody AdminLoginRequest request) {
         try {

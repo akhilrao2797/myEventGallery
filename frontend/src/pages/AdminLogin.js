@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { adminLogin } from '../services/api';
 import { FiUser, FiLock, FiShield } from 'react-icons/fi';
 import './Auth.css';
@@ -104,11 +104,20 @@ function AdminLogin() {
             </button>
           </form>
 
-          <div className="auth-footer">
+          <div className="auth-links">
             <p>
-              <a href="/login">Customer Login</a> | 
-              <a href="/guest/login">Guest Login</a>
+              Need to create an admin account?{' '}
+              <Link to="/admin/register">Register here</Link>
             </p>
+            <div className="auth-divider"></div>
+            <div className="other-logins">
+              <Link to="/login" className="link-secondary">
+                Customer Login
+              </Link>
+              <Link to="/guest/login" className="link-secondary">
+                Guest Login
+              </Link>
+            </div>
           </div>
         </div>
       </div>

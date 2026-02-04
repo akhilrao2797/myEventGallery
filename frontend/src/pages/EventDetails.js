@@ -37,11 +37,15 @@ function EventDetails() {
   const loadEventDetails = async () => {
     try {
       const response = await getEventDetails(eventId);
+      console.log('Event details response:', response.data);
       if (response.data.success) {
         setEvent(response.data.data);
+      } else {
+        setError(response.data.message || 'Failed to load event details');
       }
     } catch (err) {
-      setError('Failed to load event details');
+      console.error('Error loading event details:', err);
+      setError(err.response?.data?.message || 'Failed to load event details');
     } finally {
       setLoading(false);
     }
@@ -50,6 +54,7 @@ function EventDetails() {
   const loadGroupedImages = async () => {
     try {
       const response = await getEventImagesGrouped(eventId);
+      console.log('Grouped images response:', response.data);
       if (response.data.success) {
         setGroupedImages(response.data.data);
         // Expand all folders by default
@@ -57,7 +62,8 @@ function EventDetails() {
         setExpandedFolders(new Set(guestIds));
       }
     } catch (err) {
-      console.error('Failed to load images', err);
+      console.error('Failed to load images:', err);
+      console.error('Error details:', err.response?.data);
     }
   };
 
