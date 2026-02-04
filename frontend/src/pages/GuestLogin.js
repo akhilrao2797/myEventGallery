@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { guestLogin } from '../../services/api';
+import { guestLogin } from '../services/api';
 import { FiUser, FiLock, FiHash } from 'react-icons/fi';
-import '../Auth.css';
+import './Auth.css';
 
 function GuestLogin() {
   const navigate = useNavigate();
@@ -23,14 +23,17 @@ function GuestLogin() {
       const response = await guestLogin(formData);
       if (response.data.success) {
         const { token, id, name, email } = response.data.data;
+        // Store guest auth data
         localStorage.setItem('guestToken', token);
         localStorage.setItem('guestId', id);
         localStorage.setItem('guestName', name);
         localStorage.setItem('guestEmail', email);
+        
+        // Redirect to guest dashboard
         navigate('/guest/dashboard');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }

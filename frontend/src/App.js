@@ -10,14 +10,34 @@ import CreateEvent from './pages/CreateEvent';
 import EventDetails from './pages/EventDetails';
 import GuestRegistration from './pages/GuestRegistration';
 import GuestUpload from './pages/GuestUpload';
+import GuestLogin from './pages/GuestLogin';
+import GuestDashboard from './pages/GuestDashboard';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 
-// Auth helper
+// Auth helpers
 const isAuthenticated = () => {
   return localStorage.getItem('token') !== null;
 };
 
+const isGuestAuthenticated = () => {
+  return localStorage.getItem('guestToken') !== null;
+};
+
+const isAdminAuthenticated = () => {
+  return localStorage.getItem('adminToken') !== null;
+};
+
 const ProtectedRoute = ({ children }) => {
   return isAuthenticated() ? children : <Navigate to="/login" />;
+};
+
+const GuestProtectedRoute = ({ children }) => {
+  return isGuestAuthenticated() ? children : <Navigate to="/guest/login" />;
+};
+
+const AdminProtectedRoute = ({ children }) => {
+  return isAdminAuthenticated() ? children : <Navigate to="/admin/login" />;
 };
 
 function App() {
@@ -25,9 +45,12 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          
+          {/* Customer Protected Routes */}
           <Route 
             path="/dashboard" 
             element={
@@ -45,15 +68,37 @@ function App() {
             } 
           />
           <Route 
-            path="/event/:eventId" 
+            path="/events/:eventId" 
             element={
               <ProtectedRoute>
                 <EventDetails />
               </ProtectedRoute>
             } 
           />
+          
+          {/* Guest Routes */}
+          <Route path="/guest/login" element={<GuestLogin />} />
           <Route path="/guest/register" element={<GuestRegistration />} />
           <Route path="/guest/upload/:guestId" element={<GuestUpload />} />
+          <Route 
+            path="/guest/dashboard" 
+            element={
+              <GuestProtectedRoute>
+                <GuestDashboard />
+              </GuestProtectedRoute>
+            } 
+          />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <AdminProtectedRoute>
+                <AdminDashboard />
+              </AdminProtectedRoute>
+            } 
+          />
         </Routes>
       </div>
     </Router>

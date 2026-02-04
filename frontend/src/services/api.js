@@ -10,7 +10,20 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    // Smart token selection based on endpoint
+    const guestToken = localStorage.getItem('guestToken');
+    const customerToken = localStorage.getItem('token');
+    const adminToken = localStorage.getItem('adminToken');
+    
+    let token;
+    if (config.url?.includes('/admin/')) {
+      token = adminToken; // Admin endpoints
+    } else if (config.url?.includes('/guest/')) {
+      token = guestToken; // Guest endpoints
+    } else {
+      token = customerToken; // Customer endpoints
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
