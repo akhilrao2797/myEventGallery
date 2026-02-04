@@ -1,16 +1,24 @@
+# ============================================
+# Java / Spring Boot / Maven
+# ============================================
+
+# Maven build directory
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Maven wrapper
+.mvn/
+mvnw
+mvnw.cmd
+
 # Compiled class files
 *.class
 
 # Log files
 *.log
+logs/
 
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files
+# Package files
 *.jar
 *.war
 *.nar
@@ -23,17 +31,48 @@
 hs_err_pid*
 replay_pid*
 
-# Maven
-target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
-.mvn/wrapper/maven-wrapper.jar
+# ============================================
+# React / Node.js / Frontend
+# ============================================
+
+# Dependencies (HUGE - never commit!)
+node_modules/
+frontend/node_modules/
+
+# Production build
+build/
+dist/
+frontend/build/
+frontend/dist/
+
+# Testing
+coverage/
+frontend/coverage/
+.nyc_output/
+
+# Environment variables (may contain secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+frontend/.env
+frontend/.env.local
+
+# npm/yarn logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Package lock files (optional - some teams ignore these)
+# package-lock.json
+# yarn.lock
+
+# ============================================
+# IDEs and Editors
+# ============================================
 
 # IntelliJ IDEA
 .idea/
@@ -43,89 +82,157 @@ buildNumber.properties
 out/
 
 # Eclipse
-.project
 .classpath
+.project
 .settings/
-.metadata/
 bin/
-tmp/
 
 # VS Code
 .vscode/
 *.code-workspace
 
 # NetBeans
-nbproject/private/
-build/
+nbproject/
 nbbuild/
-dist/
 nbdist/
 .nb-gradle/
 
-# Spring Boot
-application-local.properties
-application-dev.properties
-application-prod.properties
+# ============================================
+# Operating System Files
+# ============================================
 
-# Environment variables
-.env
-.env.local
-.env.development
-.env.production
-
-# Frontend
-frontend/node_modules/
-frontend/build/
-frontend/dist/
-frontend/.env
-frontend/.env.local
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
-frontend/.pnp
-frontend/.pnp.js
-frontend/coverage/
-
-# Testing
+# macOS
 .DS_Store
 .AppleDouble
 .LSOverride
-
-# Thumbnails
 ._*
 
-# Files that might appear in the root
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# Directories potentially created on remote AFP share
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
+# Linux
+*~
+.directory
+.Trash-*
 
-# AWS credentials
-aws-credentials.properties
+# ============================================
+# Application Specific
+# ============================================
 
-# Database
-*.db
-*.sqlite
-
-# Logs
-logs/
-*.log.*
-
-# Backup files
-*.bak
-*.backup
-*.old
+# Local uploads directory (images stored locally)
+uploads/
+storage/
+local-storage/
 
 # Temporary files
 *.tmp
 *.temp
+*.swp
+*.swo
+*~.nib
+
+# Database files (if using H2 or SQLite locally)
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration files with secrets
+application-prod.properties
+application-secret.properties
+.env.prod
+
+# AWS credentials
+.aws/
+
+# Docker volumes data
+docker-data/
+postgres-data/
+
+# ============================================
+# Testing & Coverage
+# ============================================
+
+# JUnit test results
+.junit/
+junit/
+
+# Code coverage reports
+jacoco.exec
+.jacoco/
+
+# Surefire reports
+surefire-reports/
+
+# ============================================
+# Build Tools & Package Managers
+# ============================================
+
+# Gradle
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+
+# npm/yarn cache
+.npm/
+.yarn/
+.pnp.*
+.yarn-integrity
+
+# ============================================
+# Documentation Build Output
+# ============================================
+
+# Generated documentation
+docs/_build/
+site/
+
+# ============================================
+# Backup Files
+# ============================================
+
+*.bak
+*.backup
+*.old
+*-backup
+*-old
+
+# ============================================
+# Other
+# ============================================
+
+# Thumbnails
+*.thumb
+
+# QR codes generated at runtime (optional - you may want to keep these)
+# qr-codes/
+
+# Certificates and keys
+*.key
+*.pem
+*.crt
+*.p12
+*.jks
+
+# Agent tool output (from cursor)
+.cursor/
+
+# Terraform state (if using IaC)
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Serverless
+.serverless/
+
+# Python (if you add any Python scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
