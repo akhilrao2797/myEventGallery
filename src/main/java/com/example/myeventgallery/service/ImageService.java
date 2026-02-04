@@ -1,5 +1,6 @@
 package com.example.myeventgallery.service;
 
+import com.example.myeventgallery.dto.EventImagesGroupedResponse;
 import com.example.myeventgallery.dto.ImageResponse;
 import com.example.myeventgallery.model.Event;
 import com.example.myeventgallery.model.Guest;
@@ -12,10 +13,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class ImageService {
@@ -130,6 +136,106 @@ public class ImageService {
         
         // Delete from database
         imageRepository.delete(image);
+    }
+    
+    /**
+     * Get images grouped by guest for customer dashboard
+     */
+    public EventImagesGroupedResponse getEventImagesGroupedByGuest(Long eventId, Long customerId) {
+        List<Image> images = imageRepository.findByEventId(eventId);
+        
+        if (images.isEmpty()) {
+            throw new RuntimeException("No images found for this event");
+        }
+        
+        // Verify customer owns the event
+        Event event = images.get(0).getEvent();
+        if (!event.getCustomer().getId().equals(customerId)) {
+            throw new RuntimeException("Unauthorized access");
+        }
+        
+        // Group images by guest
+        Map<Guest, List<Image>> imagesByGuest = images.stream()
+                .collect(Collectors.groupingBy(Image::getGuest));
+        
+        // Convert to response format
+        Map<String, EventImagesGroupedResponse.GuestImagesGroup> guestGroups = new LinkedHashMap<>();
+        
+        for (Map.Entry<Guest, List<Image>> entry : imagesByGuest.entrySet()) {
+            Guest guest = entry.getKey();
+            List<Image> guestImages = entry.getValue();
+            
+            List<ImageResponse> imageResponses = guestImages.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            
+            EventImagesGroupedResponse.GuestImagesGroup group = EventImagesGroupedResponse.GuestImagesGroup.builder()
+                    .guestId(guest.getId())
+                    .guestName(guest.getName())
+                    .guestEmail(guest.getEmail())
+                    .imageCount(guestImages.size())
+                    .images(imageResponses)
+                    .build();
+            
+            guestGroups.put(guest.getName(), group);
+        }
+        
+        return EventImagesGroupedResponse.builder()
+                .eventId(event.getId())
+                .eventName(event.getName())
+                .totalImages(images.size())
+                .totalGuests(guestGroups.size())
+                .guestGroups(guestGroups)
+                .build();
+    }
+    
+    /**
+     * Download selected images as ZIP
+     */
+    public byte[] downloadImagesAsZip(List<Long> imageIds, Long customerId) throws IOException {
+        List<Image> images = imageRepository.findAllById(imageIds);
+        
+        if (images.isEmpty()) {
+            throw new RuntimeException("No images found");
+        }
+        
+        // Verify customer owns all images
+        boolean allOwned = images.stream()
+                .allMatch(img -> img.getEvent().getCustomer().getId().equals(customerId));
+        
+        if (!allOwned) {
+            throw new RuntimeException("Unauthorized access to some images");
+        }
+        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            for (Image image : images) {
+                try {
+                    // Get file bytes from storage
+                    byte[] fileBytes;
+                    if (storageService instanceof LocalStorageService) {
+                        fileBytes = ((LocalStorageService) storageService).getFile(image.getS3Key());
+                    } else {
+                        // For S3, we'd need to download the file
+                        // This would require adding a method to StorageService interface
+                        throw new RuntimeException("Bulk download from S3 not yet implemented");
+                    }
+                    
+                    // Create ZIP entry with guest folder structure
+                    String zipEntryName = image.getGuest().getName() + "/" + image.getOriginalFileName();
+                    ZipEntry zipEntry = new ZipEntry(zipEntryName);
+                    zos.putNextEntry(zipEntry);
+                    zos.write(fileBytes);
+                    zos.closeEntry();
+                    
+                } catch (IOException e) {
+                    // Log error but continue with other files
+                    System.err.println("Error adding file to ZIP: " + image.getFileName());
+                }
+            }
+        }
+        
+        return baos.toByteArray();
     }
     
     private ImageResponse convertToResponse(Image image) {

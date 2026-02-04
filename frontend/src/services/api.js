@@ -1,55 +1,94 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
-
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: 'http://localhost:8080/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.clear();
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
-// Auth APIs
-export const register = (data) => api.post('/auth/register', data);
-export const login = (data) => api.post('/auth/login', data);
+// Utility function to construct image URL
+export const getImageUrl = (s3Url) => {
+  if (!s3Url) return '';
+  if (s3Url.startsWith('http')) return s3Url; // S3 URL
+  return `http://localhost:8080/api/files/${s3Url}`; // Local URL
+};
 
-// Package APIs
-export const getPackages = () => api.get('/packages/list');
+// Customer Auth APIs
+export const customerRegister = (data) => api.post('/auth/register', data);
+export const customerLogin = (data) => api.post('/auth/login', data);
+
+// Guest Auth APIs
+export const guestLogin = (data) => api.post('/guest/login', data);
+export const getGuestDashboard = () => api.get('/guest/dashboard');
+export const deleteGuestImage = (imageId) => api.delete(`/guest/image/${imageId}`);
+
+// Admin Auth APIs
+export const adminLogin = (data) => api.post('/admin/login', data);
+export const getAdminDashboard = () => api.get('/admin/dashboard/stats');
+export const getAllEvents = (params) => api.get('/admin/events', { params });
+export const searchEvents = (query) => api.get('/admin/events/search', { params: { query } });
+export const deleteEvent = (eventId) => api.delete(`/admin/events/${eventId}`);
+export const updateEvent = (eventId, updates) => api.put(`/admin/events/${eventId}`, updates);
+export const getAllCustomers = () => api.get('/admin/customers');
+export const getCustomerDetails = (customerId) => api.get(`/admin/customers/${customerId}`);
+export const deleteCustomer = (customerId) => api.delete(`/admin/customers/${customerId}`);
 
 // Event APIs
 export const createEvent = (data) => api.post('/events', data);
 export const getMyEvents = () => api.get('/events');
-export const getEventById = (eventId) => api.get(`/events/${eventId}`);
-export const getEventQRCode = (eventCode) => `${API_BASE_URL}/events/qr/${eventCode}`;
-
-// Guest APIs
-export const registerGuest = (data) => api.post('/guest/register', data);
-export const uploadImages = (guestId, files) => {
-  const formData = new FormData();
-  files.forEach((file) => {
-    formData.append('files', file);
-  });
-  
-  return axios.post(`${API_BASE_URL}/guest/${guestId}/upload`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-};
+export const getEventDetails = (eventId) => api.get(`/events/${eventId}`);
+export const getEventByCode = (eventCode) => api.get(`/events/code/${eventCode}`);
+export const getQRCode = (eventCode) => api.get(`/events/qr/${eventCode}`, { responseType: 'blob' });
 
 // Image APIs
 export const getEventImages = (eventId) => api.get(`/images/event/${eventId}`);
-export const getEventImagesPaginated = (eventId, page = 0, size = 20) => 
-  api.get(`/images/event/${eventId}/paginated?page=${page}&size=${size}`);
+export const getEventImagesGrouped = (eventId) => api.get(`/images/event/${eventId}/grouped`);
 export const deleteImage = (imageId) => api.delete(`/images/${imageId}`);
+export const downloadImagesAsZip = (imageIds) => 
+  api.post('/images/download-zip', { imageIds }, { responseType: 'blob' });
+
+// Guest APIs
+export const registerGuest = (data) => api.post('/guest/register', data);
+export const uploadImages = (guestId, formData) => 
+  api.post(`/guest/${guestId}/upload`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+
+// Shared Folder APIs
+export const createSharedFolder = (data) => api.post('/shared-folders', data);
+export const getMySharedFolders = () => api.get('/shared-folders');
+export const getSharedFolder = (shareCode, password) => 
+  api.get(`/shared-folders/public/${shareCode}`, { params: { password } });
+export const updateFolderImages = (folderId, imageIds) => 
+  api.put(`/shared-folders/${folderId}/images`, { imageIds });
+export const deleteSharedFolder = (folderId) => api.delete(`/shared-folders/${folderId}`);
+
+// Package APIs
+export const getPackages = () => api.get('/packages');
 
 export default api;

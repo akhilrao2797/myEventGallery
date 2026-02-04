@@ -11,6 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +45,15 @@ public class Event {
     @NotNull(message = "Event date is required")
     @Column(name = "event_date", nullable = false)
     private LocalDate eventDate;
+    
+    @Column(name = "event_start_time")
+    private LocalTime eventStartTime;
+    
+    @Column(name = "event_end_time")
+    private LocalTime eventEndTime;
+    
+    @Column(name = "qr_valid_until")
+    private LocalDateTime qrValidUntil;
     
     @Column(name = "venue")
     private String venue;
@@ -105,5 +115,25 @@ public class Event {
         if (this.s3FolderPath == null) {
             this.s3FolderPath = "events/" + this.eventCode + "/";
         }
+        if (this.qrValidUntil == null && this.eventDate != null) {
+            // QR valid until 3 days after event date at 23:59:59
+            this.qrValidUntil = this.eventDate.plusDays(3).atTime(23, 59, 59);
+        }
+    }
+    
+    /**
+     * Check if QR code is currently valid for uploads
+     */
+    public boolean isQrCodeValid() {
+        if (qrValidUntil == null) {
+            return false; // No validity set means invalid
+        }
+        
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime eventStart = (eventStartTime != null) 
+            ? eventDate.atTime(eventStartTime)
+            : eventDate.atStartOfDay();
+        
+        return now.isAfter(eventStart) && now.isBefore(qrValidUntil);
     }
 }

@@ -24,9 +24,6 @@ public class LocalStorageService implements StorageService {
     @Value("${storage.local.base-path:./uploads}")
     private String basePath;
     
-    @Value("${app.base-url:http://localhost:8080}")
-    private String baseUrl;
-    
     @Override
     public String uploadFile(MultipartFile file, String folderPath) throws IOException {
         // Create directory if it doesn't exist
@@ -40,14 +37,18 @@ public class LocalStorageService implements StorageService {
         // Copy file to target location
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         
-        // Return the relative path as key
-        return folderPath + fileName;
+        // Return the relative path as key (without leading slash for consistency)
+        String key = folderPath + fileName;
+        return key.startsWith("/") ? key.substring(1) : key;
     }
     
     @Override
     public String getFileUrl(String key) {
-        // Return URL to access the file via API
-        return baseUrl + "/api/files/" + key;
+        // Ensure key doesn't start with slash
+        String cleanKey = key.startsWith("/") ? key.substring(1) : key;
+        // For local storage, return the storage key itself
+        // The frontend will construct the full URL
+        return cleanKey;
     }
     
     @Override

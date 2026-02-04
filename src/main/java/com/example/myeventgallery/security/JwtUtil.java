@@ -25,10 +25,23 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
     
-    public String generateToken(String email, Long customerId) {
+    public String generateCustomerToken(String email, Long customerId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("customerId", customerId);
+        claims.put("type", "CUSTOMER");
         return createToken(claims, email);
+    }
+    
+    public String generateGuestToken(String email, Long guestId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("guestId", guestId);
+        claims.put("type", "GUEST");
+        return createToken(claims, email);
+    }
+    
+    // Legacy method for backward compatibility
+    public String generateToken(String email, Long customerId) {
+        return generateCustomerToken(email, customerId);
     }
     
     private String createToken(Map<String, Object> claims, String subject) {
@@ -52,6 +65,15 @@ public class JwtUtil {
         return extractClaims(token).get("customerId", Long.class);
     }
     
+    public Long extractGuestId(String token) {
+        return extractClaims(token).get("guestId", Long.class);
+    }
+    
+    public String extractUserType(String token) {
+        Object type = extractClaims(token).get("type");
+        return type != null ? type.toString() : "CUSTOMER"; // Default to CUSTOMER for backward compatibility
+    }
+    
     public Date extractExpiration(String token) {
         return extractClaims(token).getExpiration();
     }
@@ -71,5 +93,9 @@ public class JwtUtil {
     public Boolean validateToken(String token, String email) {
         final String extractedEmail = extractEmail(token);
         return (extractedEmail.equals(email) && !isTokenExpired(token));
+    }
+    
+    public Boolean validateToken(String token) {
+        return !isTokenExpired(token);
     }
 }

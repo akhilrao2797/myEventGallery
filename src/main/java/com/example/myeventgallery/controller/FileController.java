@@ -1,6 +1,7 @@
 package com.example.myeventgallery.controller;
 
 import com.example.myeventgallery.service.LocalStorageService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ByteArrayResource;
@@ -24,22 +25,27 @@ public class FileController {
     private LocalStorageService localStorageService;
     
     @GetMapping("/{eventCode}/**")
-    public ResponseEntity<Resource> serveFile(@PathVariable String eventCode, @RequestParam String file) {
+    public ResponseEntity<Resource> serveFile(@PathVariable String eventCode, HttpServletRequest request) {
         try {
-            // Construct full path: events/{eventCode}/{filename}
-            String fullPath = "events/" + eventCode + "/" + file;
+            // Extract the full path after /api/files/
+            String requestUri = request.getRequestURI();
+            String fullPath = requestUri.substring(requestUri.indexOf("/api/files/") + 11);
+            
+            // Clean the path - remove leading slash if present
+            fullPath = fullPath.startsWith("/") ? fullPath.substring(1) : fullPath;
             
             // Get file from local storage
             byte[] fileBytes = localStorageService.getFile(fullPath);
             
             // Determine content type
-            String contentType = determineContentType(file);
+            String contentType = determineContentType(fullPath);
             
             ByteArrayResource resource = new ByteArrayResource(fileBytes);
             
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
+                    .header(HttpHeaders.CACHE_CONTROL, "max-age=31536000")
                     .body(resource);
                     
         } catch (IOException e) {

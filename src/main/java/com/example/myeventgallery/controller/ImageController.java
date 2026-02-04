@@ -51,6 +51,42 @@ public class ImageController {
         }
     }
     
+    @GetMapping("/event/{eventId}/grouped")
+    public ResponseEntity<ApiResponse<com.example.myeventgallery.dto.EventImagesGroupedResponse>> getEventImagesGrouped(
+            @PathVariable Long eventId,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.substring(7);
+            Long customerId = jwtUtil.extractCustomerId(token);
+            
+            com.example.myeventgallery.dto.EventImagesGroupedResponse grouped = 
+                imageService.getEventImagesGroupedByGuest(eventId, customerId);
+            return ResponseEntity.ok(ApiResponse.success("Images retrieved successfully", grouped));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/download-zip")
+    public ResponseEntity<byte[]> downloadImagesAsZip(
+            @RequestBody java.util.Map<String, java.util.List<Long>> request,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.substring(7);
+            Long customerId = jwtUtil.extractCustomerId(token);
+            
+            java.util.List<Long> imageIds = request.get("imageIds");
+            byte[] zipBytes = imageService.downloadImagesAsZip(imageIds, customerId);
+            
+            return ResponseEntity.ok()
+                    .header("Content-Type", "application/zip")
+                    .header("Content-Disposition", "attachment; filename=images.zip")
+                    .body(zipBytes);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
     @DeleteMapping("/{imageId}")
     public ResponseEntity<ApiResponse<Void>> deleteImage(
             @PathVariable Long imageId,
