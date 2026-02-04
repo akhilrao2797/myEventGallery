@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { register } from '../services/api';
+import { customerRegister } from '../services/api';
 import './Auth.css';
 
 function Register() {
@@ -27,7 +27,7 @@ function Register() {
     setLoading(true);
 
     try {
-      const response = await register(formData);
+      const response = await customerRegister(formData);
       if (response.data.success) {
         localStorage.setItem('token', response.data.data.token);
         localStorage.setItem('customerId', response.data.data.customerId);
