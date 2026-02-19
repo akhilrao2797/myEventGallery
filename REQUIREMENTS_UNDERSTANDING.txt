@@ -1,0 +1,116 @@
+================================================================================
+              EVENT PHOTO SHARING APP — REQUIREMENTS (FINAL)
+                         (Clarifications incorporated)
+================================================================================
+
+ACTORS
+------
+1. Customer — Event organizer/host; creates events, pays, views/manages photos.
+2. Guest — Scans QR, registers/logs in, uploads photos; can view own uploads.
+3. Admin — Scope TBD; specification to be provided later. Placeholder role and structure only until then.
+
+================================================================================
+TECH STACK
+================================================================================
+
+BACKEND
+  Framework: Spring Boot 3.2.2 (Java 17)
+  Database: PostgreSQL
+  ORM: JPA/Hibernate
+  Security: Spring Security + JWT (HS256, 24-hour expiry)
+  Password: BCrypt (strength 10)
+  Storage: AWS S3 (production) / Local filesystem (development)
+  QR Code: ZXing, 300x300 PNG
+  Build: Maven
+
+FRONTEND
+  Library: React 18
+  Router: React Router DOM v6
+  HTTP: Axios (with interceptors)
+  Upload: React Dropzone
+  Icons: React Icons (Feather)
+  Testing: Jest + React Testing Library
+  Build: Create React App
+
+================================================================================
+CUSTOMER WORKFLOW
+================================================================================
+
+1. Register — New customer can self-register.
+2. Login — Customer can log in.
+3. Dashboard — Show all events created by the customer as cards.
+4. Event detail — Click an event to view photos uploaded by guests. Photos are organized in folders named by guest. Event types include marriage, birthday, engagement, farewell, etc.
+5. Bulk delete — Customer can delete one or many images from one or multiple guest folders in a single event, in one action.
+6. Bulk download — Customer can download one or many images from one or multiple guest folders in a single event (e.g. as ZIP).
+7. Create event — Customer can create a new event with basic details. Each event gets a QR code valid during the event time.
+8. Payment — On event creation, call Razorpay (India) and persist payment status in the DB.
+9. Share via link — Customer can select a set of photos and share them via a link.
+    - No password by default.
+    - User can optionally set expiry date/time and/or password for the share link.
+    - Implement optional password and optional expiry; both configurable by the user when creating the share.
+10. Customised album — Customer can request a customised album from selected photos, or the system can suggest an album layout based on the event gallery. Output format: PDF (generate and offer download).
+
+================================================================================
+GUEST WORKFLOW
+================================================================================
+
+1. Register / Login — On scanning the event QR, guest either registers (first time) or logs in (already registered). After login, direct to the event they scanned.
+2. Guest dashboard — Guest sees all events where they uploaded images. They can open an event and modify (delete or add) their own images. This is allowed only within a configurable window: “X days allowed to modify after the event started” (dynamic property).
+3. Upload window — Guests can upload only after the event has started (no upload before event start).
+4. Upload limit — A dynamic property limits how many images can be uploaded in a single upload (e.g. max N images per request).
+5. Event info for guest — Guest sees limited event details only: e.g. date, venue, time, event type (and any other non-sensitive fields as decided).
+6. Duplicate & content moderation:
+    - Duplicate detection: Use perceptual hashing for duplicate/near-duplicate image detection. Preferred approach: open-source perceptual hash (e.g. pHash-style DCT-based hashing) so that the same or very similar images (resized, recompressed, slight edits) are detected and deduplicated. Store image hashes and reject or flag duplicates per guest/event.
+    - Content moderation: Use an open-source or freely usable AI/ML model or service to scan for vulgar, inappropriate, or irrelevant content. Options include: open-source NSFW/inappropriate-content detection models (e.g. Hugging Face–based classifiers, or a dedicated open-source moderation service). Integrate the chosen solution so that offending images are rejected or quarantined and not stored in the gallery.
+
+================================================================================
+ADMIN
+================================================================================
+
+Admin features are not specified yet. To be added later. Implement only role and placeholder endpoints/structure (e.g. admin login placeholder, reserved routes).
+
+================================================================================
+UI
+================================================================================
+
+- Rich, modern UI using current front-end practices.
+- Take inspiration from guestpix.com and photomall.in.
+- Customer experience: Interactive flow (e.g. questions or guided steps) when creating an event to improve UX.
+- Guest UI: Rich, clear experience for registration, upload, and dashboard.
+- Theming: Background/theme can vary by event type (e.g. marriage vs birthday vs farewell).
+
+================================================================================
+ENVIRONMENT & DEPLOYMENT
+================================================================================
+
+- Support both local and production setups; easy to run and test.
+- Ample test coverage: frontend (e.g. Jest + React Testing Library) and backend (e.g. JUnit + integration tests).
+- Code reviewed for correct wiring and basic optimisations.
+
+================================================================================
+APIs & DATA
+================================================================================
+
+- Define and implement REST APIs and PostgreSQL schema to support all above flows.
+- Payment: Razorpay integration for India (event creation payment; store status and relevant IDs in DB).
+- AWS: Use where applicable (e.g. S3 for production storage; optional Lambda/other services if needed).
+- Authentication and authorization with JWT and roles (Customer, Guest, Admin) applied consistently across APIs.
+- Design for production: security best practices, validation, error handling, no known critical vulnerabilities.
+
+================================================================================
+CLARIFICATIONS (CONFIRMED)
+================================================================================
+
+1. Share link — No password by default. User can optionally set expiry and/or password; enable both options in the feature.
+2. Customised album — Deliver album as PDF (generate PDF from selected/suggested layout and provide download).
+3. Duplicate & moderation — Duplicate detection: perceptual hashing (e.g. pHash / DCT-based open-source algorithm). Content moderation: open-source or freely usable AI/ML model/service for inappropriate content (e.g. NSFW/inappropriate-image detection); integrate and enforce so that such content is not stored in the gallery.
+4. Payment gateway — Razorpay, India.
+5. Admin — Yes to placeholder: only role and placeholder endpoints/structure until full specification is provided.
+
+================================================================================
+NEXT STEP
+================================================================================
+
+This document is the approved requirements baseline. Implementation will cover: backend (Spring Boot, DB, auth, S3/local storage, Razorpay, QR, share links with optional password/expiry, PDF album, perceptual-hash duplicate detection, content moderation integration, APIs) and frontend (React, dashboard, event creation, guest flow, theming, share and album UX, tests) as per this document.
+
+================================================================================

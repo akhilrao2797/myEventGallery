@@ -1,110 +1,92 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import './App.css';
-
-// Import pages
-import Login from './pages/Login';
-import Register from './pages/Register';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import Layout from './components/Layout';
+import CustomerLogin from './pages/CustomerLogin';
+import CustomerRegister from './pages/CustomerRegister';
 import Dashboard from './pages/Dashboard';
 import CreateEvent from './pages/CreateEvent';
-import EventDetails from './pages/EventDetails';
-import GuestRegistration from './pages/GuestRegistration';
-import GuestUpload from './pages/GuestUpload';
-import GuestLogin from './pages/GuestLogin';
-import GuestDashboard from './pages/GuestDashboard';
-import AdminLogin from './pages/AdminLogin';
-import AdminRegister from './pages/AdminRegister';
-import AdminDashboard from './pages/AdminDashboard';
+import EventDetail from './pages/EventDetail';
+import GuestLanding from './pages/guest/GuestLanding';
+import GuestRegister from './pages/guest/GuestRegister';
+import GuestLogin from './pages/guest/GuestLogin';
+import GuestDashboard from './pages/guest/GuestDashboard';
+import GuestUpload from './pages/guest/GuestUpload';
+import SharedView from './pages/SharedView';
+import './App.css';
 
-// Auth helpers
-const isAuthenticated = () => {
-  return localStorage.getItem('token') !== null;
-};
-
-const isGuestAuthenticated = () => {
-  return localStorage.getItem('guestToken') !== null;
-};
-
-const isAdminAuthenticated = () => {
-  return localStorage.getItem('adminToken') !== null;
-};
-
-const ProtectedRoute = ({ children }) => {
-  return isAuthenticated() ? children : <Navigate to="/login" />;
-};
-
-const GuestProtectedRoute = ({ children }) => {
-  return isGuestAuthenticated() ? children : <Navigate to="/guest/login" />;
-};
-
-const AdminProtectedRoute = ({ children }) => {
-  return isAdminAuthenticated() ? children : <Navigate to="/admin/login" />;
-};
-
-function App() {
-  return (
-    <Router>
-      <div className="App">
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Customer Protected Routes */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/create-event" 
-            element={
-              <ProtectedRoute>
-                <CreateEvent />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/events/:eventId" 
-            element={
-              <ProtectedRoute>
-                <EventDetails />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Guest Routes */}
-          <Route path="/guest/login" element={<GuestLogin />} />
-          <Route path="/guest/register" element={<GuestRegistration />} />
-          <Route path="/guest/upload/:guestId" element={<GuestUpload />} />
-          <Route 
-            path="/guest/dashboard" 
-            element={
-              <GuestProtectedRoute>
-                <GuestDashboard />
-              </GuestProtectedRoute>
-            } 
-          />
-          
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/register" element={<AdminRegister />} />
-          <Route 
-            path="/admin/dashboard" 
-            element={
-              <AdminProtectedRoute>
-                <AdminDashboard />
-              </AdminProtectedRoute>
-            } 
-          />
-        </Routes>
-      </div>
-    </Router>
-  );
+function PrivateCustomer({ children }) {
+  const { isCustomer, loading } = useAuth();
+  if (loading) return <div className="app-loading">Loading...</div>;
+  if (!isCustomer) return <Navigate to="/login" replace />;
+  return children;
 }
 
-export default App;
+function PrivateGuest({ children }) {
+  const { isGuest, loading } = useAuth();
+  if (loading) return <div className="app-loading">Loading...</div>;
+  if (!isGuest) return <Navigate to="/guest" replace />;
+  return children;
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<CustomerLogin />} />
+      <Route path="/register" element={<CustomerRegister />} />
+      <Route path="/guest" element={<GuestLanding />} />
+      <Route path="/guest/register" element={<GuestRegister />} />
+      <Route path="/guest/login" element={<GuestLogin />} />
+      <Route path="/shared/:shareCode" element={<SharedView />} />
+
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path="dashboard"
+          element={
+            <PrivateCustomer>
+              <Dashboard />
+            </PrivateCustomer>
+          }
+        />
+        <Route
+          path="events/new"
+          element={
+            <PrivateCustomer>
+              <CreateEvent />
+            </PrivateCustomer>
+          }
+        />
+        <Route
+          path="events/:eventId"
+          element={
+            <PrivateCustomer>
+              <EventDetail />
+            </PrivateCustomer>
+          }
+        />
+      </Route>
+
+      <Route path="/guest-app" element={<Layout />}>
+        <Route
+          path="dashboard"
+          element={
+            <PrivateGuest>
+              <GuestDashboard />
+            </PrivateGuest>
+          }
+        />
+        <Route
+          path="event/:eventId/upload"
+          element={
+            <PrivateGuest>
+              <GuestUpload />
+            </PrivateGuest>
+          }
+        />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
